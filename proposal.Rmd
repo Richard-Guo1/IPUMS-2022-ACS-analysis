@@ -1,0 +1,10 @@
+---
+title: "Proposal"
+author: "Richard Guo and Shujian Zhu"
+output:
+  pdf_document:
+bibliography: references.bib
+---
+@IPUMS
+
+# References
