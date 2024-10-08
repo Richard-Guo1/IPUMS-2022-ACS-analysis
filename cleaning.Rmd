@@ -1,0 +1,40 @@
+```{r}
+library(fastDummies)
+library(tidyverse)
+
+data <- read.csv('usa_00003.csv')
+
+# Isolate responses from New York
+NY <- subset(data, data$STATEICP == 13)
+
+# Isolate columns used for analysis
+NY <- subset(NY, select = -c(YEAR, SAMPLE, SERIAL, CBSERIAL, HHWT, CLUSTER, STATEICP, STRATA, GQ, PERNUM, PERWT, RACED, CITIZEN, EDUC, EDUCD, DEGFIELD, DEGFIELDD, TRANWORK))
+
+# Remove rows with missing/NA data
+cleaned <- subset(NY, NY$SEX != 9 & NY$UHRSWORK != 0)
+
+# Subtract 1 from sex values to align with categorical standards
+cleaned$SEX <- (cleaned$SEX - c(1))
+
+# Consolidate Asians and Non-Black/White/Asian respondents
+cleaned$RACE[cleaned$RACE == 5 | cleaned$RACE == 6] <- 4
+cleaned$RACE[cleaned$RACE > 6] <- 3
+
+# Generate dummy variables based on race
+cleaned <- fastDummies::dummy_cols(cleaned, select_columns = "RACE")
+
+# Rename Columns, remove redundant columns
+cleaned <- cleaned %>%
+  rename(
+    isBlack = RACE_2,
+    isOther = RACE_3,
+    isAsian = RACE_4
+  )
+cleaned = subset(cleaned, select = -c(RACE, RACE_1))
+
+# Reorder columns for beautification
+cleaned <- cleaned[,c(4,1,2,6,8,7,3,5)]
+
+# Save cleaned data set
+write.csv(cleaned, 'cleaned.csv')
+```
