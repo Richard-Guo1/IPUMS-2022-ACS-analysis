@@ -1,24 +1,22 @@
-```{r}
+```{r echo = FALSE}
 library(fastDummies)
 library(tidyverse)
-
+library(knitr)
+```
+```{r echo = FALSE}
 data <- read.csv('usa_00003.csv')
 
 # Isolate responses from New York
 NY <- subset(data, data$STATEICP == 13)
 
 # Isolate columns used for analysis
-NY <- subset(NY, select = -c(YEAR, SAMPLE, SERIAL, CBSERIAL, HHWT, CLUSTER, STATEICP, STRATA, GQ, PERNUM, PERWT, RACED, CITIZEN, EDUC, DEGFIELD, DEGFIELDD, TRANWORK, TRANTIME))
+NY <- subset(NY, select = -c(YEAR, SAMPLE, SERIAL, CBSERIAL, HHWT, CLUSTER, STATEICP, STRATA, GQ, PERNUM, PERWT, RACED, CITIZEN, EDUCD, DEGFIELD, DEGFIELDD, TRANWORK, TRANTIME))
 
 # Remove rows with missing/NA data
-cleaned <- subset(NY, NY$SEX != 9 & NY$UHRSWORK != 0 & NY$EDUCD > 1 & NY$EDUCD < 999)
+cleaned <- subset(NY, NY$SEX != 9 & NY$UHRSWORK != 0 & NY$EDUC < 99)
 
 # Subtract 1 from sex values to align with categorical standards
 cleaned$SEX <- (cleaned$SEX - c(1))
-
-# Change EDUCD to categorical predictor based on bachelors degree acquisition
-cleaned$EDUCD[cleaned$EDUCD < 101] <- 0
-cleaned$EDUCD[cleaned$EDUCD > 100] <- 1
 
 # Consolidate Asians and Non-Black/White/Asian respondents
 cleaned$RACE[cleaned$RACE == 5 | cleaned$RACE == 6] <- 4
@@ -33,8 +31,8 @@ cleaned <- cleaned %>%
     isBlack = RACE_2,
     isOther = RACE_3,
     isAsian = RACE_4,
-    hasBachelors = EDUCD,
-    yearlyIncome = INCTOT,
+    education = EDUC,
+    income = INCTOT,
     weeklyHours = UHRSWORK
   )
 cleaned = subset(cleaned, select = -c(RACE, RACE_1))
@@ -43,5 +41,13 @@ cleaned = subset(cleaned, select = -c(RACE, RACE_1))
 cleaned <- cleaned[,c(5,1,2,6,8,7,3,4)]
 
 # Save cleaned data set
-write.csv(cleaned, 'cleaned.csv')
+write.csv(cleaned, 'cleaned.csv', row.names = FALSE)
+```
+```{r echo = FALSE}
+  cleaned |> ggplot(aes(x = income)) + geom_boxplot() + theme(axis.ticks.y = element_blank(), axis.text.y = element_blank())
+  summary(cleaned$income)
+```
+
+```{r echo = FALSE}
+  plot(cleaned)
 ```
